@@ -31,6 +31,7 @@ class Birthday(Field):
         try:
             if isinstance(value, str) and re.fullmatch(r'\d{2}.(\d{1}|\d{2}).\d{4}', value) is not None: 
                 self.value = datetime.strptime(value, "%d.%m.%Y").date()
+            else: raise ValueError("Invalid date format. Use DD.MM.YYYY")
         except ValueError:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
 
@@ -41,24 +42,38 @@ class Record:
         self.phones = []
         self.birthday = None
 
+    @property
+    def get_phones(self):
+        list_of_phones = []
+        for phone in self.phones:
+            list_of_phones.append(phone.value)
+        return list_of_phones
+    
     def add_phone(self, phone):
         if self.find_phone(phone):
-            raise Exception(f"The phone number:{phone} has already been added")
+            print(f"The phone number:{phone} has already been added")
+            return
         self.phones.append(Phone(phone))
 
     def remove_phone(self, phone):
         if not self.find_phone(phone):
-            raise Exception(f"The phone number:{phone} is not found")
+            print(f"The phone number:{phone} is not found")
+            return
         self.phones = [ph for ph in self.phones if ph.value != phone]   
 
     def edit_phone(self, phone, new_phone):
         if not self.find_phone(phone):
-            raise Exception(f"The phone number:{phone} is not found")
+            print(f"The phone number:{phone} is not found")
+            return
         self.phones = [Phone(new_phone) if ph.value == phone else ph for ph in self.phones]
         
     def find_phone(self, phone):
         result = [ph for ph in self.phones if ph.value == phone]
         return result[0] if len(result) > 0 else None
+    
+    @property
+    def get_birthday(self):
+        return self.birthday
     
     def add_birthday(self, birthday_str):
         self.birthday=Birthday(birthday_str)
@@ -69,6 +84,9 @@ class Record:
 
 class AddressBook(UserDict):
 
+    def __getitem__(self, key):
+        return self.data.get(key, "Key not found")
+    
     def add_record(self, record):
         if record.name.value in self.data:
             raise Exception(f"The contact with name:{record.name.value} has already been added")
@@ -76,14 +94,19 @@ class AddressBook(UserDict):
             
     def find(self, name):
         result = self.data.get(name, None)
-        if result == None:
-            raise Exception(f"The contact with name:{name} is not found")
+        # if result == None:
+        #     raise Exception(f"The contact with name:{name} is not found")
         return result
 
     def delete(self, name):
         if not name in self.data:
             raise Exception(f"The contact with name:{name} is not found")
         del self.data[name]
+
+    @property
+    def get_all_records(self):
+        return self.data
+    
     
     def get_upcoming_birthdays(self):
         records_to_congr = []

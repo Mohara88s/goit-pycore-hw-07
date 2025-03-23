@@ -1,4 +1,4 @@
-from utility import parse_input, add_contact, change_contact, show_phone, show_all, colorize_message
+from utility import *
 from colorama import Fore, init
 from components import AddressBook
 init(autoreset=True)
@@ -21,16 +21,29 @@ def main():
         elif command == "change":
             print(change_contact(args, book))
         elif command == "phone":
-            print(show_phone(args, book))
+            print(', '.join(show_phone(args, book)))
         elif command == "all":
             print(colorize_message(f"{"Name":<20}{"Phone":<15}", "MAGENTA"))
             for i, contact in enumerate(show_all(book)):
-                print(colorize_message(f"{contact.name:<20}{contact.phone:<15}", f"{"CYAN" if i%2==0 else "BLUE"}"))
+                print(colorize_message(f"{contact.name:<20}{'\n                    '.join(contact.phones)}", f"{"CYAN" if i%2==0 else "BLUE"}"))
+        elif command == "add-birthday":
+            print(add_birthday(args, book))
+        elif command == "show-birthday":
+            print(show_birthday(args, book))
+        elif command == "birthdays":
+            print(colorize_message(f"{"Name":<20}{"Birthday":<15}", "MAGENTA"))
+            for i, contact in enumerate(birthdays(book)):
+                print(colorize_message(f"{contact.name:<20}{'\n                    '.join(contact.birthday)}", f"{"CYAN" if i%2==0 else "BLUE"}"))
         else:
             print(colorize_message("Invalid command.", "YELLOW"))
 
 if __name__ == "__main__":
     main()
+    # try:
+    #     main()
+    # except Exception as e:
+    # # Обробка будь-якого винятку
+    #     print(f"An error occurred: {e}")
 
 
 # To start the project:
