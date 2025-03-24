@@ -1,7 +1,6 @@
 from colorama import Fore, init
 from collections import namedtuple
-from components import AddressBook, Record, Birthday, Phone, Name
-
+from components import AddressBook, Record
 
 init(autoreset=True)
 COLORS_SET={
@@ -14,17 +13,6 @@ COLORS_SET={
         'LIGHTCYAN_EX':Fore.LIGHTCYAN_EX,
     }
 
-def input_error(func):
-    def inner(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except ValueError:
-            return colorize_message("Give me name and  phone please.", "RED")
-        except KeyError:
-            return colorize_message("Give me name and phone please.", "RED")
-        except IndexError:
-            return colorize_message("Enter user name.", "RED")
-    return inner
 
 def colorize_message(message, color):
     color=color.upper()
@@ -32,68 +20,102 @@ def colorize_message(message, color):
         return f"{COLORS_SET[color]}{message}{Fore.RESET}"
     else:
         return f"{Fore.WHITE}{message}{Fore.RESET}"
-    
-@input_error
+
+
+def error_handler(e):
+    print(colorize_message(f"{e}", "RED"))
+
+
 def parse_input(user_input):
     cmd, *args = user_input.split()
     cmd = cmd.strip().lower()
     return cmd, *args
+    
 
-
-@input_error
 def add_contact(args, book: AddressBook):
+    if len(args)<2:
+        raise ValueError("Please give me the contact's name and phone")
     name, phone, *_ = args
     record = book.find(name)
-    message = "Contact updated."
+    message = "Contact updated"
     if record is None:
         record = Record(name)
         book.add_record(record)
-        message = "Contact added."
+        message = "Contact added"
     if phone:
         record.add_phone(phone)
     return colorize_message(message, "GREEN")
 
-@input_error
+
 def change_contact(args, book: AddressBook):
+    if len(args)<3:
+        raise ValueError("Please give me the contact's name, old phone and new phone")
     name, phone, new_phone, *_ = args
     record = book.find(name)
+    if record is None:
+        raise Exception(f"The contact {name} is not found")
     record.edit_phone(phone, new_phone)
-    message = "Contact updated."
+    message = "Contact updated"
     return colorize_message(message, "GREEN")
 
 
-@input_error
 def show_phone(args, book: AddressBook):
+    if len(args)<1:
+        raise ValueError("Please give me the contact's name")
     name, *_ = args
     record = book.find(name)
+    if record is None:
+        raise Exception(f"The contact {name} is not found")
     return record.get_phones
+
+
+def delete_contact(args, book: AddressBook):
+    if len(args)<1:
+        raise ValueError("Please give me the contact's name")
+    name, *_ = args
+    book.delete(name)
+    message = "Contact deleted"
+    return colorize_message(message, "GREEN")
+
 
 def show_all(book: AddressBook):
     list_of_contacts = []
-    Contact = namedtuple('Contact', ['name', 'phones'])
+    Contact_tuple = namedtuple('Contact', ['name', 'phones'])
     for name, record in book.get_all_records.items():
-        list_of_contacts.append(Contact(name, record.get_phones))
+        list_of_contacts.append(Contact_tuple(name, record.get_phones))
     return sorted(list_of_contacts)
 
-@input_error
+
 def add_birthday(args, book: AddressBook):
+    if len(args)<2:
+        raise ValueError(f"Please give me the contact's name and birthday date")
     name, birthay, *_ = args
     record = book.find(name)
+    if record is None:
+        raise Exception(f"The contact {name} is not found")
     record.add_birthday(birthay)
-    message = "Contact updated."
+    message = "Contact updated"
     return colorize_message(message, "GREEN")
 
-@input_error
+
 def show_birthday(args, book: AddressBook):
+    if len(args)<1:
+        raise ValueError(f"Please give me the contact's name")
     name, *_ = args
     record = book.find(name)
-    print(record)
+    if record is None:
+        raise Exception(f"The contact {name} is not found")
     res = record.get_birthday
-    return res if res else 'Birthday not added yet.'
+    return colorize_message(res, "GREEN")
+
 
 def birthdays(book: AddressBook):
-    print(book.get_upcoming_birthdays())
-    return book.get_upcoming_birthdays()
+    list_of_birthdays = []
+    Birthday_tuple = namedtuple('Birthday_tuple', ['name', 'birthday'])
+    for contact in book.get_upcoming_birthdays():
+        list_of_birthdays.append(Birthday_tuple(contact.get('name'), contact.get('congratulation_date')))
+    return list_of_birthdays
+
 
 if __name__ == "__main__":
     pass

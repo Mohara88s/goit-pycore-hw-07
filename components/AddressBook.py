@@ -28,12 +28,9 @@ class Phone(Field):
 
 class Birthday(Field):
     def __init__(self, value):
-        try:
-            if isinstance(value, str) and re.fullmatch(r'\d{2}.(\d{1}|\d{2}).\d{4}', value) is not None: 
-                self.value = datetime.strptime(value, "%d.%m.%Y").date()
-            else: raise ValueError("Invalid date format. Use DD.MM.YYYY")
-        except ValueError:
-            raise ValueError("Invalid date format. Use DD.MM.YYYY")
+        if isinstance(value, str) and re.fullmatch(r'\d{2}.(\d{1}|\d{2}).\d{4}', value) is not None: 
+            self.value = datetime.strptime(value, "%d.%m.%Y").date()
+        else: raise ValueError("Invalid date format. Use DD.MM.YYYY")
 
     
 class Record:
@@ -51,20 +48,17 @@ class Record:
     
     def add_phone(self, phone):
         if self.find_phone(phone):
-            print(f"The phone number:{phone} has already been added")
-            return
+            raise Exception(f"The phone number:{phone} has already been added")
         self.phones.append(Phone(phone))
 
     def remove_phone(self, phone):
         if not self.find_phone(phone):
-            print(f"The phone number:{phone} is not found")
-            return
+            raise Exception(f"The phone number:{phone} is not found")
         self.phones = [ph for ph in self.phones if ph.value != phone]   
 
     def edit_phone(self, phone, new_phone):
         if not self.find_phone(phone):
-            print(f"The phone number:{phone} is not found")
-            return
+            raise Exception(f"The phone number:{phone} is not found")
         self.phones = [Phone(new_phone) if ph.value == phone else ph for ph in self.phones]
         
     def find_phone(self, phone):
@@ -73,7 +67,11 @@ class Record:
     
     @property
     def get_birthday(self):
-        return self.birthday
+        if self.birthday:   
+            birthday_date = datetime.strptime(str(self.birthday), "%Y-%m-%d").strftime("%d.%m.%Y")
+        else:
+            raise Exception(f"The birthday is not found")
+        return birthday_date
     
     def add_birthday(self, birthday_str):
         self.birthday=Birthday(birthday_str)
@@ -94,8 +92,6 @@ class AddressBook(UserDict):
             
     def find(self, name):
         result = self.data.get(name, None)
-        # if result == None:
-        #     raise Exception(f"The contact with name:{name} is not found")
         return result
 
     def delete(self, name):
@@ -106,7 +102,6 @@ class AddressBook(UserDict):
     @property
     def get_all_records(self):
         return self.data
-    
     
     def get_upcoming_birthdays(self):
         records_to_congr = []
@@ -122,8 +117,7 @@ class AddressBook(UserDict):
                     next_bd = next_bd + timedelta(days = 2)
                 if bday_of_week == 6:
                     next_bd = next_bd + timedelta(days = 1)
-            
-                congratulation_date = next_bd.strftime("%Y.%m.%d")
+                congratulation_date = next_bd.strftime("%d.%m.%Y")
                 records_to_congr.append({"name":name, "congratulation_date":congratulation_date})
         return records_to_congr
     
@@ -170,6 +164,7 @@ if __name__ == "__main__":
         john_record.add_phone("1231231231")
         # Додавання дня народження для John
         john_record.add_birthday("25.03.2000")
+        print(john_record.get_birthday) # Виведення: 2000.03.25
         print(john) # Виведення: Contact name: John, contact birthday:2000-03-25, phones: 1112223333; 5555555555; 1231231231
         john_record.remove_phone("1231231231")
         print(john) # Виведення: Contact name: John, contact birthday:2000-03-25, phones: 1112223333; 5555555555
